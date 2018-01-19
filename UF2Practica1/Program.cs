@@ -27,9 +27,8 @@ namespace UF2Practica1
 		{
 			var clock = new Stopwatch();
 			var threads = new List<Task>();
-			//Recordeu-vos indicar la ruta del fitxer
-			string filePath="";
 
+			string filePath= @"..\..\..\clients.csv";
 			try
 			{
 				using (StreamReader sr = new StreamReader(filePath))
@@ -38,7 +37,7 @@ namespace UF2Practica1
     					while (sr.Peek() != -1)
     					{
        						string line = sr.ReadLine();
-        					var values = line.Split(';');
+        					var values = line.Split(',');
                     				var tmp = new Client() { nom = values[0], carretCompra = Int32.Parse(values[1]) };
                     				cua.Enqueue(tmp);
 
@@ -56,14 +55,18 @@ namespace UF2Practica1
 			clock.Start();
 
 
-			// Instanciar les caixeres i afegir el task creat a la llista de tasks
+            // Instanciar les caixeres i afegir el task creat a la llista de tasks
+            Caixera caixera1 = new Caixera { idCaixera = 1 };
+            Caixera caixera2 = new Caixera { idCaixera = 2 };
+            Caixera caixera3 = new Caixera { idCaixera = 3 };
 
+            threads.Add(Task.Run(() => { caixera1.ProcessarCua(); }));
+            threads.Add(Task.Run(() => { caixera2.ProcessarCua(); }));
+            threads.Add(Task.Run(() => { caixera3.ProcessarCua(); }));
 
+            // Procediment per esperar que acabin tots els threads abans d'acabar
 
-
-			// Procediment per esperar que acabin tots els threads abans d'acabar
-			
-			Task.WaitAll(task.ToArray());
+            Task.WaitAll(threads.ToArray());
 
 			// Parem el rellotge i mostrem el temps que triga
 			clock.Stop();
@@ -84,12 +87,20 @@ namespace UF2Practica1
 
 		public void ProcessarCua()
 		{
-			// Llegirem la cua extreient l'element
-			// cridem al mètode ProcesarCompra passant-li el client
+            // Llegirem la cua extreient l'element
+            // cridem al mètode ProcesarCompra passant-li el client
+            Client client;
 
+            while(MainClass.cua.Count > 0)
+            {
+                bool Completat = MainClass.cua.TryDequeue(out client);
 
-
-		}
+                if (Completat)
+                {
+                    this.ProcesarCompra(client);
+                }
+            }
+        }
 
 
 		private void ProcesarCompra(Client client)
